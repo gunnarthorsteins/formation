@@ -1,6 +1,11 @@
+import json
 import numpy as np
 import pandas as pd
+from scipy.interpolate import interp1d
+from scipy import stats
 import voltaiq_studio as vs
+
+import figures
 
 def load_data_by_experiment(experiment: vs.test_record.test_record.TestRecord,
                             trace_keys: list) -> pd.DataFrame:
@@ -25,6 +30,22 @@ def load_data_by_experiment(experiment: vs.test_record.test_record.TestRecord,
     return df
 
 
+def get_json(filename: str) -> dict:
+    """Fetches data from a json file.
+
+    Args:
+        filename (str): Filename, w/o file-ending.
+
+    Returns:
+        dict: JSON data as a dict.
+    """
+
+    with open(f"{filename}.json") as f:
+        json_ = json.load(f)
+
+    return json_
+
+
 def generate_exp_id(name: str) -> str:
     """Generates experiment ID.
     
@@ -46,6 +67,10 @@ def generate_exp_id(name: str) -> str:
 
     # Totally goes against Zen of Python's code readability, but anyway
     return str(abs(int(name.name.split(' ')[-1].split('.')[0])))
+
+
+def get_p_val(var_1, var_2):
+    return stats.ttest_ind(var_1, var_2).pvalue
 
 
 def zero_shift_formation(df: pd.DataFrame, V_min: float = 2.9) -> pd.DataFrame:
@@ -122,46 +147,8 @@ def filter_HPPC(by_cycle: pd.DataFrame,
     return indices
 
 
-def _explanatory_fig(df: pd.DataFrame, indices: list):
-    """Plots a single current pulse.
-    
-    Zooms in on the temporal axis for clarification.
-    Helper function for get_resonance().
-    
-    Args:
-        df (pd.DataFrame): HPPC data
-        indices (list[list, list]): Indices of V_min and V_max.
-    """
 
-    fields = ['h_potential', 'h_current']
-    c = ['b', 'r']
-    ylims = [[3.3, 3.5], [-2.8, 0.4]]
-    ylabels = ['V [V]', 'I [A]']
-    text = ['V_1', 'V_0']
-
-    df.index /= 3600  # s to h
-    df.index -= df.index[0]
-
-    fig, axs = plt.subplots(2, figsize=(4, 3), dpi=150)
-    for row, field in enumerate(fields):
-        axs[row].plot(df.index, df[field], 'k')
-        axs[row].set_ylim(ylims[row])
-        axs[row].set_ylabel(ylabels[row])
-        axs[row].set_xlim([1.8, 2.0])
-
-        for j, index in enumerate(indices):
-            axs[row].scatter(df.index[index],
-                             df[field].iloc[index],
-                             s=20,
-                             c=c[j])
-
-    axs[0].set_title('Showing $\Delta \mathrm{V}$')
-    axs[0].get_xaxis().set_visible(False)
-    plt.subplots_adjust(wspace=0.02, hspace=0.02)
-    plt.show()
-
-
-def _get_V_indices(current: np.array, I_min: float = -1.5) -> [list, list]:
+def _get_V_indices(current: np.array, I_min: float = -1.5) -> list[list, list]:
     """Gets voltage indices at start of and end of (negative) current pulses.
     
     Helper function for get_resistance().
@@ -221,7 +208,7 @@ def get_resistance(cycling: pd.DataFrame,
         current=hppc_cycle.h_current.values)
 
     if to_plot == 0:  # Sorry Zen
-        _explanatory_fig(df=hppc_cycle, indices=[V_min_indices, V_max_indices])
+        figures._explanatory_fig(df=hppc_cycle, indices=[V_min_indices, V_max_indices])
 
     delta_V = V[V_max_indices] - V[V_min_indices]
 

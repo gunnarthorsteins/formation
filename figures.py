@@ -2,6 +2,9 @@ from abc import ABC, abstractmethod
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 
+import numpy as np
+import pandas as pd
+
 # The following line is the only thing I've taken from the original code.
 # It's actually the only thing I checked in the code.
 # Everything is done fully from scratch.
@@ -263,3 +266,97 @@ class Figure3(Figure):
     def showme(self):
         plt.subplots_adjust(wspace=0.1, hspace=0.1)
         self.fig.show()
+
+
+class FormationFigure:
+
+    def __init__(self, no_cols: int, no_curves):
+        self.fig, self.axs = plt.subplots(1, no_cols, figsize=(16, 4))
+        self.colormap = plt.cm.coolwarm(np.linspace(0, 1, no_curves))
+
+    def scatterplot(self):
+        pass
+
+    def boxplot(self):
+        pass
+
+    def lineplot(self, col: int, df: pd.DataFrame, i: int):
+        self.axs[col].plot(df.index / 3600, df.h_potential, c=self.colormap[i])
+
+    def properties(self, no_cols: int, titles: list[str]):
+        for col in range(no_cols):
+            self.axs[col].set_xlabel('t [h]')
+            self.axs[col].set_title(titles[col])
+
+        self.axs[1].get_yaxis().set_visible(False)
+        plt.suptitle('Formation')
+
+    def showme(self):
+        plt.subplots_adjust(wspace=0.1, hspace=0.1)
+        self.fig.show()
+
+
+class AdolescenceFigure:
+    def __init__(self, no_cols: int, no_curves=no_curves):
+        self.fig, self.axs = plt.subplots(1, no_cols, figsize=(16,4))
+        self.colormap = plt.cm.coolwarm(np.linspace(0, 1, no_curves))
+
+    def scatterplot(self):
+        pass
+
+    def boxplot(self):
+        pass
+
+    def lineplot(self, col: int, df: pd.DataFrame, i: int):
+        self.axs[col].plot(df.index/3600, df.h_potential, c=self.colormap[i])
+
+    def properties(self, no_cols: int, titles: list[str]):
+        for col in range(no_cols):
+            self.axs[col].set_xlabel('t [h]')
+            self.axs[col].set_title(titles[col])
+
+        self.axs[1].get_yaxis().set_visible(False)
+        plt.suptitle('Cycling')
+
+    def showme(self):
+        plt.subplots_adjust(wspace=0.1, hspace=0.1)
+        self.fig.show()
+
+
+def _explanatory_fig(df: pd.DataFrame, indices: list):
+    """Plots a single current pulse.
+    
+    Zooms in on the temporal axis for clarification.
+    Helper function for get_resistance().
+    
+    Args:
+        df (pd.DataFrame): HPPC data
+        indices (list[list, list]): Indices of V_min and V_max.
+    """
+
+    fields = ['h_potential', 'h_current']
+    c = ['b', 'r']
+    ylims = [[3.3, 3.5], [-2.8, 0.4]]
+    ylabels = ['V [V]', 'I [A]']
+    text = ['V_1', 'V_0']
+
+    df.index /= 3600  # s to h
+    df.index -= df.index[0]
+
+    fig, axs = plt.subplots(2, figsize=(4, 3), dpi=150)
+    for row, field in enumerate(fields):
+        axs[row].plot(df.index, df[field], 'k')
+        axs[row].set_ylim(ylims[row])
+        axs[row].set_ylabel(ylabels[row])
+        axs[row].set_xlim([1.8, 2.0])
+
+        for j, index in enumerate(indices):
+            axs[row].scatter(df.index[index],
+                             df[field].iloc[index],
+                             s=20,
+                             c=c[j])
+
+    axs[0].set_title('Showing $\Delta \mathrm{V}$')
+    axs[0].get_xaxis().set_visible(False)
+    plt.subplots_adjust(wspace=0.02, hspace=0.02)
+    plt.show()
