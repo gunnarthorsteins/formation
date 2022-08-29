@@ -1,0 +1,10 @@
+{
+    "trace_keys": ["h_test_time",
+                   "h_cycle",
+                   "h_discharge_capacity",
+                   "h_step_index",
+                   "h_charge_capacity",
+                   "h_current",
+                   "h_potential"]
+
+}
