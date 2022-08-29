@@ -297,7 +297,7 @@ class FormationFigure:
 
 
 class AdolescenceFigure:
-    def __init__(self, no_cols: int, no_curves=no_curves):
+    def __init__(self, no_cols: int, no_curves: int):
         self.fig, self.axs = plt.subplots(1, no_cols, figsize=(16,4))
         self.colormap = plt.cm.coolwarm(np.linspace(0, 1, no_curves))
 
