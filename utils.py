@@ -7,8 +7,7 @@ import voltaiq_studio as vs
 
 import figures
 
-def load_data_by_experiment(experiment: vs.test_record.test_record.TestRecord,
-                            trace_keys: list) -> pd.DataFrame:
+def load_data_by_experiment(experiment: vs.test_record.test_record.TestRecord, trace_keys: list) -> pd.DataFrame:
     """Loads in experiment as pandas dataframe.
     
     Args:
@@ -65,11 +64,20 @@ def generate_exp_id(name: str) -> str:
         >> 13
     """
 
-    # Totally goes against Zen of Python's code readability, but anyway
     return str(abs(int(name.name.split(' ')[-1].split('.')[0])))
 
 
-def get_p_val(var_1, var_2):
+def get_p_val(var_1: list, var_2: list) -> float:
+    """Calculate p-value of two variables.
+    
+    Args:
+        var_1 (list): First variable.
+        var_2 (list): Second variable.
+    
+    Returns:
+        float: p-value.
+    """
+    
     return stats.ttest_ind(var_1, var_2).pvalue
 
 
@@ -93,8 +101,7 @@ def zero_shift_formation(df: pd.DataFrame, V_min: float = 2.9) -> pd.DataFrame:
     return df
 
 
-def match_cycling_with_formation(categorized_experiments: dict,
-                                 formations: dict) -> dict:
+def match_cycling_with_formation(categorized_experiments: dict, formations: dict) -> dict:
     """Merges formation with cycling.
     
     Formation and cycling data are in two separate files
@@ -120,13 +127,9 @@ def match_cycling_with_formation(categorized_experiments: dict,
     return categorized_experiments
 
 
-def filter_HPPC(by_cycle: pd.DataFrame,
-                column: str = 'h_discharge_capacity',
-                threshold: float = 0.01) -> list:
+def filter_HPPC(by_cycle: pd.DataFrame, column: str = 'h_discharge_capacity', threshold: float = 0.01) -> list:
     """Removes HPPC and embedded reference performance tests.
-    
-    Hacky, but works so can't be bothered changing.
-    
+        
     Args:
         by_cycle (pd.DataFrame): Experiment grouped by cycle.
         column (str, optional): Column to be filtered on.
@@ -152,9 +155,6 @@ def _get_V_indices(current: np.array, I_min: float = -1.5) -> list[list, list]:
     """Gets voltage indices at start of and end of (negative) current pulses.
     
     Helper function for get_resistance().
-    
-    The method is wayyy to complicated. However, it works and
-    I don't want to spend any more time on it.
     
     Args:
         current (np.array): Current time series.
@@ -183,9 +183,7 @@ def _get_V_indices(current: np.array, I_min: float = -1.5) -> list[list, list]:
     return V_max_indices, V_min_indices
 
 
-def get_resistance(cycling: pd.DataFrame,
-                   to_plot: int,
-                   cycle_no: int = 3) -> list:
+def get_resistance(cycling: pd.DataFrame, to_plot: int, cycle_no: int = 3) -> list:
     """Gets the resistance from the HPPC protocol.
     
     Args:
@@ -207,8 +205,11 @@ def get_resistance(cycling: pd.DataFrame,
     V_max_indices, V_min_indices = _get_V_indices(
         current=hppc_cycle.h_current.values)
 
-    if to_plot == 0:  # Sorry Zen
-        figures._explanatory_fig(df=hppc_cycle, indices=[V_min_indices, V_max_indices])
+    if to_plot == 0:
+        figures._explanatory_fig(
+            df=hppc_cycle,
+            indices=[V_min_indices, V_max_indices]
+        )
 
     delta_V = V[V_max_indices] - V[V_min_indices]
 
@@ -234,7 +235,7 @@ def get_capacities(formation: pd.DataFrame) -> list[np.array]:
     """
 
     index = 6 if max(
-        formation.index) == 7 else -1  # "Nevermind, get in the car!"
+        formation.index) == 7 else -1
     discharge_capacity = formation.h_discharge_capacity.iloc[index]
 
     charge_capacity = formation.h_charge_capacity.iloc[0]
@@ -242,9 +243,7 @@ def get_capacities(formation: pd.DataFrame) -> list[np.array]:
     return charge_capacity, discharge_capacity
 
 
-def get_R5SoC(Rs: np.ndarray,
-              SoC: list = [3.5, 7.8],
-              desired_SoC: int = 5) -> float:
+def get_R5SoC(Rs: np.ndarray, SoC: list = [3.5, 7.8], desired_SoC: int = 5) -> float:
     """Interpolates resistances at two SoCs to get R_5SoC
     
     Args:
